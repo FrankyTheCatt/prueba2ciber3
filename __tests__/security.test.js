@@ -37,6 +37,8 @@ test('V4 - existen los headers de seguridad globales', async () => {
   assert.equal(r.headers.get('x-frame-options'), 'DENY');
   assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
   assert.equal(r.headers.get('cross-origin-resource-policy'), 'same-origin');
+  assert.equal(r.headers.get('cross-origin-embedder-policy'), 'require-corp');
+  assert.equal(r.headers.get('cross-origin-opener-policy'), 'same-origin');
   assert.equal(r.headers.get('referrer-policy'), 'no-referrer');
   assert.ok(r.headers.get('permissions-policy'), 'falta Permissions-Policy');
   assert.ok(r.headers.get('strict-transport-security'), 'falta Strict-Transport-Security');
