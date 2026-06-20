@@ -1,30 +1,42 @@
-import { readFileSync } from 'fs';
-import { join } from 'path';
+import { promises as fs } from 'fs';
+import path from 'path';
 import { CORS } from '@/lib/store';
 
-/**
- * VULN V2 (Path Traversal / A01):
- * GET /api/files?name=<archivo> lee desde ./data/notes SIN sanitizar `name`.
- * Con name=../../../../etc/passwd se escapa del directorio y se leen archivos
- * arbitrarios. El Active Scan de OWASP ZAP detecta "Path Traversal" porque la
- * respuesta devuelve el contenido del archivo solicitado.
- */
-const NOTES_DIR = join(process.cwd(), 'data', 'notes');
+const NOTES_DIR = path.resolve(process.cwd(), 'data', 'notes');
+
+function isValidFileName(name) {
+  return /^[a-zA-Z0-9._-]+$/.test(name) && !name.includes('..');
+}
 
 export async function GET(req) {
   const name = new URL(req.url).searchParams.get('name') || 'bienvenida.txt';
+
+  if (!isValidFileName(name)) {
+    return Response.json(
+      { error: 'Nombre de archivo inválido' },
+      { status: 400, headers: CORS }
+    );
+  }
+
+  const requestedPath = path.resolve(NOTES_DIR, name);
+  if (!requestedPath.startsWith(`${NOTES_DIR}${path.sep}`)) {
+    return Response.json({ error: 'Acceso denegado' }, { status: 403, headers: CORS });
+  }
+
   try {
-    // <-- Falta: validar/normalizar `name` y confinarlo a NOTES_DIR
-    const content = readFileSync(join(NOTES_DIR, name), 'utf-8');
+    // realpath también impide escapar mediante enlaces simbólicos dentro del directorio.
+    const realNotesDir = await fs.realpath(NOTES_DIR);
+    const realRequestedPath = await fs.realpath(requestedPath);
+    if (!realRequestedPath.startsWith(`${realNotesDir}${path.sep}`)) {
+      return Response.json({ error: 'Acceso denegado' }, { status: 403, headers: CORS });
+    }
+
+    const content = await fs.readFile(realRequestedPath, 'utf-8');
     return new Response(content, {
       status: 200,
       headers: { 'Content-Type': 'text/plain; charset=utf-8', ...CORS },
     });
-  } catch (err) {
-    // error verboso (bonus): ZAP "Application Error Disclosure"
-    return new Response(`Error leyendo archivo: ${err.message}`, {
-      status: 404,
-      headers: { 'Content-Type': 'text/plain; charset=utf-8', ...CORS },
-    });
+  } catch {
+    return Response.json({ error: 'Archivo no encontrado' }, { status: 404, headers: CORS });
   }
 }

@@ -1,16 +1,29 @@
 import { CORS } from '@/lib/store';
 
-/**
- * VULN V3 (Open Redirect / A01):
- * GET /api/go?url=<destino> responde 302 con Location = url SIN validar que el
- * destino sea interno/permitido. Permite redirigir a sitios externos
- * (phishing). El Active Scan de OWASP ZAP detecta "External Redirect".
- */
+function getSafeRedirectTarget(rawTarget, requestUrl) {
+  if (
+    !rawTarget ||
+    !rawTarget.startsWith('/') ||
+    rawTarget.startsWith('//') ||
+    rawTarget.includes('\\') ||
+    /[\u0000-\u001f\u007f]/.test(rawTarget)
+  ) {
+    return '/';
+  }
+
+  const requestOrigin = new URL(requestUrl).origin;
+  const target = new URL(rawTarget, requestOrigin);
+  if (target.origin !== requestOrigin) return '/';
+
+  return `${target.pathname}${target.search}${target.hash}`;
+}
+
 export async function GET(req) {
-  const url = new URL(req.url).searchParams.get('url') || '/';
-  // <-- Falta: validar que `url` sea una ruta interna o este en una allowlist
+  const rawTarget = new URL(req.url).searchParams.get('url');
+  const target = getSafeRedirectTarget(rawTarget, req.url);
+
   return new Response(null, {
     status: 302,
-    headers: { Location: url, ...CORS },
+    headers: { Location: target, ...CORS },
   });
 }

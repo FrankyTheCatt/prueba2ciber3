@@ -66,8 +66,7 @@ export default function DashboardPage() {
         <nav>
           <a href="/search">Buscar</a>
           <a href="/notes">Notas</a>
-          {/* El enlace externo pasa por /api/go (redirector) -> demo de V3 */}
-          <a href="/api/go?url=https://www.ucn.cl">Sitio UCN</a>
+          <a href="https://www.ucn.cl" rel="noopener noreferrer">Sitio UCN</a>
           <button onClick={logout} className="link">Salir</button>
         </nav>
       </header>
@@ -84,7 +83,7 @@ export default function DashboardPage() {
           <li key={t.id}>
             <label>
               <input type="checkbox" checked={t.done} onChange={() => toggle(t)} />
-              <span style={{ textDecoration: t.done ? 'line-through' : 'none' }}>{t.title}</span>
+              <span className={t.done ? 'done' : undefined}>{t.title}</span>
             </label>
             <small>#{t.id}</small>
             <button onClick={() => remove(t)} className="link danger">Eliminar</button>

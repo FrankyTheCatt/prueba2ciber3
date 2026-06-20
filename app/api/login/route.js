@@ -9,22 +9,18 @@ export async function POST(req) {
     }
 
     const session = makeSession(user);
+    const secure = process.env.NODE_ENV === 'production' ? '; Secure' : '';
 
-    // VULN V5 (Security Misconfiguration / A05, A07):
-    // la cookie de sesion se emite SIN HttpOnly, SIN Secure y SIN SameSite.
-    // ZAP (passive scan) reporta: Cookie No HttpOnly Flag, Cookie Without Secure
-    // Flag y Cookie Without SameSite Attribute.
     return Response.json(
       { user: { id: user.id, username: user.username } },
       {
         headers: {
           ...CORS,
-          'Set-Cookie': `session=${session}; Path=/`,
+          'Set-Cookie': `session=${session}; Path=/; Max-Age=86400; HttpOnly; SameSite=Lax${secure}`,
         },
       }
     );
-  } catch (err) {
-    // bonus V: error verboso -> ZAP "Application Error Disclosure".
-    return Response.json({ error: err.message, stack: err.stack }, { status: 500, headers: CORS });
+  } catch {
+    return Response.json({ error: 'Solicitud inválida' }, { status: 400, headers: CORS });
   }
 }

@@ -1,13 +1,17 @@
-/**
- * next.config.js
- *
- * VULN V5 (Security Misconfiguration): NO se definen security headers.
- * No hay Content-Security-Policy, X-Frame-Options, X-Content-Type-Options,
- * Referrer-Policy ni Permissions-Policy. El passive scan de OWASP ZAP
- * reportara estas ausencias.
- *
- * (En la version corregida se agrega el bloque async headers() con CSP, etc.)
- */
-const nextConfig = {};
+const securityHeaders = [
+  { key: 'X-Frame-Options', value: 'DENY' },
+  { key: 'X-Content-Type-Options', value: 'nosniff' },
+  { key: 'Referrer-Policy', value: 'no-referrer' },
+  { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+  { key: 'Strict-Transport-Security', value: 'max-age=31536000; includeSubDomains' },
+];
+
+/** @type {import('next').NextConfig} */
+const nextConfig = {
+  poweredByHeader: false,
+  async headers() {
+    return [{ source: '/:path*', headers: securityHeaders }];
+  },
+};
 
 module.exports = nextConfig;

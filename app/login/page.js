@@ -21,7 +21,7 @@ export default function LoginPage() {
       setError('Credenciales inválidas');
       return;
     }
-    // La sesion queda en la cookie emitida por el servidor (sin flags -> V5).
+    // La sesión queda en una cookie HttpOnly emitida por el servidor.
     router.push('/');
   }
 

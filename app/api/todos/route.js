@@ -17,7 +17,7 @@ export async function POST(req) {
     const todo = { id: nextTodoId(), ownerId: sess.id, title: String(title || ''), done: false };
     todos.push(todo);
     return Response.json(todo, { status: 201, headers: CORS });
-  } catch (err) {
-    return Response.json({ error: err.message, stack: err.stack }, { status: 500, headers: CORS });
+  } catch {
+    return Response.json({ error: 'Solicitud inválida' }, { status: 400, headers: CORS });
   }
 }

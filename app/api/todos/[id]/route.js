@@ -19,8 +19,8 @@ export async function PUT(req, { params }) {
     if (typeof body.title === 'string') r.todo.title = body.title;
     if (typeof body.done === 'boolean') r.todo.done = body.done;
     return Response.json(r.todo, { headers: CORS });
-  } catch (err) {
-    return Response.json({ error: err.message, stack: err.stack }, { status: 500, headers: CORS });
+  } catch {
+    return Response.json({ error: 'Solicitud inválida' }, { status: 400, headers: CORS });
   }
 }
 
